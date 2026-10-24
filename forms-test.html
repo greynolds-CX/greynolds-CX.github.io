@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>contX Forms — test page</title>
+<style>
+  :root { --bg:#f5f7fa; --surface:#fff; --sunk:#eef2f6; --border:#dbe2ea; --text:#1b2733; --muted:#64748b; --primary:#3b6fd8;
+    --ok:#15803d; --ok-bg:#e8f6ee; --bad:#b91c1c; --bad-bg:#fdecec; --warn:#b45309; --warn-bg:#fff4e5; color-scheme:light; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#111924; --surface:#18222f; --sunk:#1f2b3a; --border:#2d3b4d; --text:#e6edf4;
+    --muted:#9aabbe; --primary:#5b8cf0; --ok:#4ade80; --ok-bg:#16301f; --bad:#f87171; --bad-bg:#2e1616; --warn:#fbbf24; --warn-bg:#2d2310; color-scheme:dark; } }
+  :root { box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+  *,*::before,*::after { box-sizing:inherit; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 -apple-system,system-ui,"Segoe UI",sans-serif; }
+  main { max-width:900px; margin:0 auto; padding:18px 14px 60px; }
+  h1 { font-size:20px; margin:0 0 4px; } h2 { font-size:16px; margin:0 0 10px; } h3 { font-size:14px; margin:16px 0 6px; }
+  .muted { color:var(--muted); font-size:13px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; margin-top:14px; }
+  textarea, input[type=text], select { width:100%; font:inherit; font-size:14px; color:var(--text); background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:8px 10px; }
+  textarea { min-height:92px; font-family:ui-monospace,Menlo,monospace; font-size:12px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:10px; }
+  .row label { display:flex; gap:6px; align-items:center; font-size:14px; }
+  button { font:inherit; font-size:14px; border-radius:8px; padding:8px 14px; border:1px solid var(--border); background:var(--surface); color:var(--text); cursor:pointer; }
+  button.primary { background:var(--primary); border-color:var(--primary); color:#fff; font-weight:600; }
+  .seg { display:inline-flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .seg button { border:0; border-radius:0; }
+  .seg button.on { background:var(--primary); color:#fff; }
+  .status { font-size:13px; padding:8px 10px; border-radius:8px; margin-top:10px; background:var(--sunk); }
+  .status.ok { background:var(--ok-bg); color:var(--ok); } .status.bad { background:var(--bad-bg); color:var(--bad); } .status.warn { background:var(--warn-bg); color:var(--warn); }
+  /* The "customer site" area is light, like a real web page. */
+  .site { background:#ffffff; color:#0f172a; border:2px dashed #94a3b8; border-radius:12px; padding:18px; min-height:120px; }
+  .site .tag { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:#64748b; margin-bottom:8px; }
+  #log { font-family:ui-monospace,Menlo,monospace; font-size:12px; max-height:260px; overflow:auto; background:var(--sunk); border-radius:8px; padding:8px; white-space:pre-wrap; }
+  #log .ok { color:var(--ok); } #log .bad { color:var(--bad); }
+  ol.steps { padding-left:20px; margin:0; } ol.steps li { margin:8px 0; }
+  ol.steps label { display:flex; gap:8px; align-items:flex-start; }
+  ol.steps input { margin-top:4px; width:18px; height:18px; flex:none; }
+  ol.steps .exp { display:block; color:var(--muted); font-size:13px; }
+  pre.sql { background:var(--sunk); border:1px solid var(--border); border-radius:8px; padding:10px; font-size:12px; overflow-x:auto; margin:6px 0; }
+  code { font-size:13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>contX Forms — test page</h1>
+  <p class="muted">Acts as a customer's website. Tests FORMS-UX-3 through FORMS-5 on DEV. Tick each step as you go — ticks are remembered on this iPad.</p>
+
+  <!-- SETUP -->
+  <div class="card">
+    <h2>1 · Load a form</h2>
+    <p class="muted">In contX: open the form → <b>Placement</b> → <b>Your website</b> → <b>Copy code</b>. Paste it here.</p>
+    <textarea id="snippet" placeholder="Paste the code from Placement → Your website → Copy code"></textarea>
+    <div class="row">
+      <span class="muted">Mode:</span>
+      <span class="seg" id="modeSeg">
+        <button data-mode="inline">Inline</button>
+        <button data-mode="on_demand">Pop-up on click</button>
+        <button data-mode="auto">Automatic</button>
+      </span>
+    </div>
+    <div class="row">
+      <label><input type="checkbox" id="skip"> Skip browser checks <span class="muted">(lets bad answers reach the server)</span></label>
+    </div>
+    <div class="row">
+      <label><input type="checkbox" id="fail"> Simulate network failure on submit</label>
+    </div>
+    <div class="row"><button class="primary" id="load">Load form</button><button id="clearLog">Clear log</button></div>
+    <div id="setupStatus" class="status">Nothing loaded yet.</div>
+  </div>
+
+  <!-- CUSTOMER SITE -->
+  <div class="card">
+    <h2>2 · The customer's page</h2>
+    <div class="site" id="site"><div class="tag">customer website</div><div id="siteBody" style="color:#64748b">Load a form above.</div></div>
+  </div>
+
+  <!-- LOG -->
+  <div class="card">
+    <h2>3 · What the page sent and got back</h2>
+    <div id="log"></div>
+  </div>
+
+  <!-- TEST SCRIPT -->
+  <div class="card">
+    <h2>4 · Test steps</h2>
+    <p class="muted">Use <b>Connect with us</b> (FRM-000001) unless a step says otherwise. Submissions create test leads on DEV.</p>
+
+    <h3>A. Website install — FORMS-5</h3>
+    <ol class="steps" data-group="A">
+      <li><label><input type="checkbox"><span>contX → Connect with us → <b>Placement</b>. <span class="exp">Expect: "Your website" shows <b>Live</b>, the "Accept submissions from websites" switch is on, and there is no "create a pop-up" notice.</span></span></label></li>
+      <li><label><input type="checkbox"><span>Here: paste the code, choose <b>Inline</b>, tap <b>Load form</b>. <span class="exp">Expect: the form appears in the customer page. Log shows <code>active → 1 surface</code> named "Website install".</span></span></label></li>
+      <li><label><input type="checkbox"><span>Fill Full name "Test Inline", Email "inline@example.com", tap the submit button. <span class="exp">Expect: the thank-you message. Log shows <code>submit → ok</code>.</span></span></label></li>
+      <li><label><input type="checkbox"><span>Choose <b>Pop-up on click</b> → Load form → tap <b>Get in touch</b>. Submit "Test Click" / "click@example.com". <span class="exp">Expect: a pop-up opens; after submit it thanks you and closes.</span></span></label></li>
+      <li><label><input type="checkbox"><span>Choose <b>Automatic</b> → Load form. <span class="exp">Expect: nothing appears (no active pop-up). Log shows <code>active → 0 surfaces</code>.</span></span></label></li>
+      <li><label><input type="checkbox"><span>Choose <b>Inline</b> → Load form, leave it open. In contX turn the switch <b>off</b>. Back here, submit "Test Off" / "off@example.com". <span class="exp">Expect: red "This form is no longer accepting responses." and no thank-you.</span></span></label></li>
+      <li><label><input type="checkbox"><span>Tap <b>Load form</b> again (switch still off). <span class="exp">Expect: nothing appears; log shows <code>active → 0 surfaces</code>. Placement shows <b>Off</b> with "Website installs are switched off…".</span></span></label></li>
+      <li><label><input type="checkbox"><span>Turn the switch back <b>on</b> in contX. Load form here. <span class="exp">Expect: the form is back.</span></span></label></li>
+    </ol>
+
+    <h3>B. What visitors see when something's wrong — FORMS-4</h3>
+    <ol class="steps" data-group="B">
+      <li><label><input type="checkbox"><span>Tick <b>Skip browser checks</b> → Inline → Load form. Full name "Test Bad", Email <code>dana@brightloop</code> → submit. <span class="exp">Expect: red "Please enter a valid email address." under Email, a red message above the button, your answers still filled in, no thank-you.</span></span></label></li>
+      <li><label><input type="checkbox"><span>Same form: clear Full name, fix the email to "bad@example.com" → submit. <span class="exp">Expect: "This field is required." under Full name.</span></span></label></li>
+      <li><label><input type="checkbox"><span>Untick Skip, tick <b>Simulate network failure</b> → Load form → submit "Test Net" / "net@example.com". <span class="exp">Expect: "Could not send. Please check your connection and try again." and no thank-you.</span></span></label></li>
+      <li><label><input type="checkbox"><span>Untick both. In contX: Connect with us → status chip → <b>Archived</b> → <b>Save changes</b> → confirm. Here: Load form. <span class="exp">Expect: nothing appears. Then set the status back to <b>Active</b> and save.</span></span></label></li>
+      <li><label><input type="checkbox"><span>Open the published landing page <code>test.contx.ai/p/test-landing-page</code> and submit "Test LP" / "lp@example.com". <span class="exp">Expect: green thank-you box.</span></span></label></li>
+    </ol>
+
+    <h3>C. Pop-ups — FORMS-UX-2 + the FORMS-5 Draft fix</h3>
+    <ol class="steps" data-group="C">
+      <li><label><input type="checkbox"><span>contX → Connect with us → Placement → <b>+ New pop-up</b>. <span class="exp">Expect: the pop-up editor opens on a Draft named "New pop-up" — no error.</span></span></label></li>
+      <li><label><input type="checkbox"><span>Back to Placement → on the new pop-up tap <b>Duplicate</b>. <span class="exp">Expect: "New pop-up (copy)" appears as Draft.</span></span></label></li>
+      <li><label><input type="checkbox"><span><b>Remove</b> both pop-ups (confirm each). <span class="exp">Expect: the Pop-ups card is empty again; "Your website" is still Live.</span></span></label></li>
+    </ol>
+
+    <h3>D. Results — FORMS-UX-3 + FORMS-3</h3>
+    <ol class="steps" data-group="D">
+      <li><label><input type="checkbox"><span>Here: Inline → Load form → submit Full name <code>=1+1</code>, Email "csv@example.com". <span class="exp">Expect: thank-you.</span></span></label></li>
+      <li><label><input type="checkbox"><span>contX → Connect with us → <b>Results</b> (Last 30 days). <span class="exp">Expect: the total matches query 1 below. Newest rows are your tests, Source "Website · {this site's address}", Delivery "Lead created". "Test Bad", "Test Net" and "Test Off" are <b>not</b> there.</span></span></label></li>
+      <li><label><input type="checkbox"><span>Source filter → <b>Website &amp; pop-ups</b>. <span class="exp">Expect: only website rows. Then set it back to All sources.</span></span></label></li>
+      <li><label><input type="checkbox"><span>Tap the "Test Inline" row. <span class="exp">Expect: a side panel with every answer, Source, Delivery, and "Open lead" that opens the created opportunity.</span></span></label></li>
+      <li><label><input type="checkbox"><span>Tap <b>Export CSV</b>. <span class="exp">Expect: the iPad downloads <code>connect-with-us-submissions-….csv</code> without a blocked pop-up, toast "Exported N submissions". Open it in Numbers: the <code>=1+1</code> row shows the text <code>'=1+1</code> (with a leading apostrophe), never 2.</span></span></label></li>
+      <li><label><input type="checkbox"><span>Forms library → Connect with us row → delete. <span class="exp">Expect: refused — "This form has submissions, so it can't be deleted. Archive it instead."</span></span></label></li>
+    </ol>
+
+    <h3>E. New forms — FORMS-5 trigger + FORMS-3</h3>
+    <ol class="steps" data-group="E">
+      <li><label><input type="checkbox"><span>Forms library → <b>New form</b>. On "Untitled Form" open <b>Placement</b>. <span class="exp">Expect: "Your website" card with the switch on and "The code won't show anything until this form is Active." (new forms start as Draft).</span></span></label></li>
+      <li><label><input type="checkbox"><span>⋯ (top right) → <b>Delete form</b> → confirm. <span class="exp">Expect: it's deleted (no submissions).</span></span></label></li>
+    </ol>
+    <div class="row"><button id="resetTicks">Clear all ticks</button></div>
+  </div>
+
+  <!-- SQL -->
+  <div class="card">
+    <h2>5 · SQL for step D2 and for anything that looks wrong</h2>
+    <p class="muted">Supabase (DEV) → SQL editor. Run each separately.</p>
+    <h3>Query 1 — Results total (last 30 days)</h3>
+<pre class="sql" id="q1">SELECT count(*) AS results_total
+  FROM public.form_submissions s
+  JOIN public.forms f ON f.id = s.form_id
+ WHERE f.form_number = 'FRM-000001'
+   AND f.name = 'Connect with us'
+   AND s.is_spam = false
+   AND s.submitted_at &gt;= now() - interval '30 days';</pre>
+    <button data-copy="q1">Copy query 1</button>
+    <h3>Query 2 — Latest submissions and how they were sourced</h3>
+<pre class="sql" id="q2">SELECT s.submitted_at,
+       s.raw_data-&gt;&gt;'email'            AS email,
+       fs.surface_type,
+       fs.name                         AS surface_name,
+       s.landing_page_url,
+       lp.name                         AS landing_page,
+       s.delivery_status,
+       s.delivery_error
+  FROM public.form_submissions s
+  JOIN public.forms f               ON f.id  = s.form_id
+  LEFT JOIN public.form_surfaces fs ON fs.id = s.form_surface_id
+  LEFT JOIN public.landing_pages lp ON lp.id = s.landing_page_id
+ WHERE f.form_number = 'FRM-000001'
+   AND f.name = 'Connect with us'
+ ORDER BY s.submitted_at DESC
+ LIMIT 15;</pre>
+    <button data-copy="q2">Copy query 2</button>
+  </div>
+</main>
+
+<script>
+(function () {
+  var DEFAULT_SDK = 'https://test.contx.ai/embed/forms.js';
+  var params = new URLSearchParams(location.search);
+  var logEl = document.getElementById('log');
+  var statusEl = document.getElementById('setupStatus');
+  var snippetEl = document.getElementById('snippet');
+  var mode = params.get('mode') || 'inline';
+  var skip = params.get('skip') === '1';
+  var fail = params.get('fail') === '1';
+
+  function log(msg, cls) {
+    var line = document.createElement('div');
+    if (cls) line.className = cls;
+    line.textContent = new Date().toLocaleTimeString() + '  ' + msg;
+    logEl.appendChild(line);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  function setStatus(msg, cls) { statusEl.textContent = msg; statusEl.className = 'status' + (cls ? ' ' + cls : ''); }
+
+  // Restore the last pasted snippet.
+  try { snippetEl.value = localStorage.getItem('cxft-snippet') || ''; } catch (_) {}
+  document.getElementById('skip').checked = skip;
+  document.getElementById('fail').checked = fail;
+  Array.prototype.forEach.call(document.querySelectorAll('#modeSeg button'), function (b) {
+    if (b.dataset.mode === mode) b.classList.add('on');
+    b.addEventListener('click', function () {
+      mode = b.dataset.mode;
+      Array.prototype.forEach.call(document.querySelectorAll('#modeSeg button'), function (x) { x.classList.toggle('on', x === b); });
+    });
+  });
+
+  function parseSnippet(text) {
+    var key = (text.match(/data-cx-embed-key="([^"]+)"/) || [])[1];
+    var api = (text.match(/data-api="([^"]+)"/) || [])[1];
+    var src = (text.match(/src="([^"]+forms\.js)"/) || [])[1];
+    return { key: key, api: api, src: src || DEFAULT_SDK };
+  }
+
+  document.getElementById('load').addEventListener('click', function () {
+    var p = parseSnippet(snippetEl.value);
+    if (!p.key || !p.api) { setStatus('Could not find the embed key and data-api in the pasted code. Copy it again from Placement → Your website.', 'bad'); return; }
+    try { localStorage.setItem('cxft-snippet', snippetEl.value); } catch (_) {}
+    var q = new URLSearchParams({ key: p.key, api: p.api, sdk: p.src, mode: mode });
+    if (document.getElementById('skip').checked) q.set('skip', '1');
+    if (document.getElementById('fail').checked) q.set('fail', '1');
+    q.set('utm_source', 'forms-test');
+    location.search = q.toString();
+  });
+  document.getElementById('clearLog').addEventListener('click', function () { logEl.innerHTML = ''; });
+
+  // ---- Watch every call the form script makes (no DevTools on iPad) ----
+  var realFetch = window.fetch.bind(window);
+  window.fetch = function (url, opts) {
+    var u = typeof url === 'string' ? url : (url && url.url) || '';
+    var action = '';
+    try { action = JSON.parse((opts && opts.body) || '{}').action || ''; } catch (_) {}
+    var watched = u.indexOf('popup-public-api') > -1;
+    if (watched && action === 'submit' && fail) {
+      log('submit → simulated network failure', 'bad');
+      return Promise.reject(new TypeError('Simulated network failure'));
+    }
+    var p = realFetch(url, opts);
+    if (watched && action && action !== 'log' && action !== 'track') {
+      p.then(function (res) { return res.clone().json().catch(function () { return null; }); })
+        .then(function (j) {
+          if (!j) { log(action + ' → (no JSON)'); return; }
+          if (j.ok === false) { log(action + ' → refused: ' + (j.error || 'error') + (j.details && j.details.field_errors ? ' ' + JSON.stringify(j.details.field_errors) : ''), 'bad'); return; }
+          var d = j.data || j;
+          if (action === 'active') {
+            var n = (d.surfaces || []).length;
+            log('active → ' + n + ' surface' + (n === 1 ? '' : 's') + (n ? ' (' + d.surfaces.map(function (s) { return s.name || s.id; }).join(', ') + ')' : ''), n ? 'ok' : 'bad');
+          } else {
+            log(action + ' → ok', 'ok');
+          }
+        }).catch(function () {});
+    } else if (watched && (action === 'log')) {
+      try { log('event: ' + JSON.parse(opts.body).event_type); } catch (_) {}
+    }
+    return p;
+  };
+
+  // ---- Load the form into the customer page ----
+  var key = params.get('key'), api = params.get('api'), sdk = params.get('sdk') || DEFAULT_SDK;
+  if (!key || !api) return;
+  if (!/^https:\/\//.test(api) || !/^https:\/\//.test(sdk)) { setStatus('Bad API or script address.', 'bad'); return; }
+  var body = document.getElementById('siteBody');
+  body.innerHTML = '';
+  body.style.color = '#0f172a';
+  if (mode === 'inline') {
+    var host = document.createElement('div');
+    host.setAttribute('data-cx-form', key);
+    body.appendChild(host);
+  } else if (mode === 'on_demand') {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = 'Get in touch';
+    btn.setAttribute('data-cx-open', key);
+    btn.style.cssText = 'background:#3b6fd8;color:#fff;border:0;border-radius:8px;padding:10px 16px;font-weight:600;';
+    body.appendChild(btn);
+  } else {
+    var note = document.createElement('p');
+    note.textContent = 'Automatic mode: a pop-up appears here only if the form has an Active pop-up whose trigger fires.';
+    note.style.color = '#64748b';
+    body.appendChild(note);
+  }
+  var s = document.createElement('script');
+  s.src = sdk;
+  s.async = true;
+  s.setAttribute('data-cx-embed-key', key);
+  s.setAttribute('data-api', api);
+  if (mode !== 'auto') s.setAttribute('data-cx-mode', mode);
+  s.setAttribute('data-cx-campaign-id', '');
+  s.onerror = function () { log('could not load ' + sdk, 'bad'); };
+  document.body.appendChild(s);
+  setStatus('Loaded ' + key + ' in ' + (mode === 'on_demand' ? 'pop-up on click' : mode) + ' mode' + (skip ? ' · browser checks skipped' : '') + (fail ? ' · submit will fail' : '') + '.', 'ok');
+
+  // ---- "Skip browser checks": let bad answers reach the server ----
+  if (skip) {
+    var relax = function (root) {
+      Array.prototype.forEach.call(root.querySelectorAll('form'), function (f) { f.noValidate = true; });
+      Array.prototype.forEach.call(root.querySelectorAll('input, textarea, select'), function (el) {
+        el.removeAttribute('required');
+        if (el.type === 'email' || el.type === 'tel' || el.type === 'number') el.type = 'text';
+      });
+    };
+    new MutationObserver(function () { relax(document.body); }).observe(document.body, { childList: true, subtree: true });
+  }
+})();
+
+// ---- Ticks and copy buttons ----
+(function () {
+  var KEY = 'cxft-ticks';
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (_) {}
+  Array.prototype.forEach.call(document.querySelectorAll('ol.steps'), function (ol) {
+    Array.prototype.forEach.call(ol.querySelectorAll('input[type=checkbox]'), function (cb, i) {
+      var id = ol.dataset.group + (i + 1);
+      cb.checked = !!saved[id];
+      cb.addEventListener('change', function () { saved[id] = cb.checked; try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (_) {} });
+    });
+  });
+  document.getElementById('resetTicks').addEventListener('click', function () {
+    saved = {}; try { localStorage.removeItem(KEY); } catch (_) {}
+    Array.prototype.forEach.call(document.querySelectorAll('ol.steps input'), function (cb) { cb.checked = false; });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-copy]'), function (b) {
+    b.addEventListener('click', function () {
+      var text = document.getElementById(b.dataset.copy).textContent;
+      (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(function () {
+        b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy ' + b.dataset.copy.replace('q', 'query '); }, 1500);
+      }).catch(function () { b.textContent = 'Select the text and copy'; });
+    });
+  });
+})();
+</script>
+</body>
+</html>
