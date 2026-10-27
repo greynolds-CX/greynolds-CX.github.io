@@ -61,9 +61,9 @@
     <p class="muted">Same card → <b>Pop-up on click</b> → <b>Copy code</b>. Leave empty and the page makes a "Get in touch" button from the form key above.</p>
     <textarea id="clk" placeholder="&lt;button data-cx-open=&quot;frm_…&quot;&gt;Get in touch&lt;/button&gt;"></textarea>
 
-    <label class="box" for="cht">Chat agent code (optional)</label>
-    <p class="muted">Only if contX → <b>Library</b> → <b>Chat Agents</b> gives you code to place on a website. If chat is switched on for the site, the site script alone should show it.</p>
-    <textarea id="cht" placeholder="Paste any chat agent embed code here"></textarea>
+    <label class="box" for="cht">Chat agent — inline embed (optional)</label>
+    <p class="muted">contX → <b>Library</b> → <b>Chat Agents</b> → your agent → <b>Placements</b> → <b>Inline embed</b> (switch on) → <b>Copy code</b>. The floating chat bubble needs no code here — the site script shows it.</p>
+    <textarea id="cht" placeholder="&lt;div data-cx-chat=&quot;…&quot;&gt;&lt;/div&gt;"></textarea>
 
     <div class="row">
       <label><input type="checkbox" id="skip"> Skip browser checks <span class="muted">(lets bad answers reach the server)</span></label>
@@ -81,7 +81,7 @@
     <div class="site" id="site">
       <div class="tag">Inline form</div><div class="slot" id="slotForm"><div class="empty">Paste the form placement code and load the site.</div></div>
       <div class="tag">Pop-up on click</div><div class="slot" id="slotClick"><div class="empty">—</div></div>
-      <div class="tag">Chat</div><div class="slot" id="slotChat"><div class="empty">If chat is on for this site, the chat button appears at the bottom corner of the screen.</div></div>
+      <div class="tag">Chat (inline)</div><div class="slot" id="slotChat"><div class="empty">Paste the inline embed code to show the agent here. The floating bubble appears in a bottom corner of the screen.</div></div>
     </div>
   </div>
 
@@ -134,13 +134,15 @@
       <li><label><input type="checkbox"><span>Here: Load the site and wait. <span class="exp">Expect: the pop-up appears after the delay. Then set the pop-up back to Draft or remove it in contX.</span></span></label></li>
     </ol>
 
-    <h3>G. Chat</h3>
+    <h3>G. Chat agent</h3>
     <ol class="steps" data-group="G">
-      <li><label><input type="checkbox"><span>Load the site and look at the bottom corners of the screen. <span class="exp">Expect, if chat is on for this website: a chat button appears and the log shows <code>cx-config → ok</code> with chat in it. If nothing appears, note it — see the box below.</span></span></label></li>
-      <li><label><input type="checkbox"><span>If a chat button shows: open it, say "I'd like a demo", give the name "Site Chat" and email "site-chat@example.com". <span class="exp">Expect: replies arrive; the log shows <code>site-chat</code> calls; a lead appears in contX Opportunities.</span></span></label></li>
-      <li><label><input type="checkbox"><span>If Chat Agents gives you embed code: paste it in the Chat agent box, Load the site, and repeat step 2. <span class="exp">Expect: the agent appears where its code says.</span></span></label></li>
+      <li><label><input type="checkbox"><span>contX → <b>Library</b> → <b>Chat Agents</b> → open the agent to test (Active) → <b>Placements</b>. Under <b>Where this agent can appear</b>, make sure <b>greynolds-cx.github.io</b> is listed. <span class="exp">Expect: the site is listed; the agent only answers on listed websites.</span></span></label></li>
+      <li><label><input type="checkbox"><span>Same tab → <b>Chat bubble</b> → add one (or use an existing one) with no URL rules, all devices, and make sure it shows <b>Live</b>. <span class="exp">Expect: it saves with no error.</span></span></label></li>
+      <li><label><input type="checkbox"><span>Here: <b>Load the site</b> and look at the bottom corners. <span class="exp">Expect: the chat bubble appears; the log shows a chat script load.</span></span></label></li>
+      <li><label><input type="checkbox"><span>Open the bubble, type "I'd like a demo", then give the name "Site Chat" and email "site-chat@example.com" when asked. <span class="exp">Expect: replies arrive; the log shows <code>site-chat → ok</code>; a lead appears in contX Opportunities.</span></span></label></li>
+      <li><label><input type="checkbox"><span>contX → the agent → Placements → <b>Inline embed</b>: switch on → <b>Copy code</b>. Paste into the <b>Chat agent — inline embed</b> box above → Load the site. <span class="exp">Expect: the agent's chat appears inside the "Chat (inline)" box on the customer page.</span></span></label></li>
+      <li><label><input type="checkbox"><span>Switch the bubble to <b>Off</b> in contX → Load the site. <span class="exp">Expect: no bubble; the inline chat still shows. Switch the bubble back on when done.</span></span></label></li>
     </ol>
-    <div class="note">In the code checked on Oct 26, only contx.ai's own website agent could run in chat, and there was no way to put your own Chat Agent on a customer's website yet. If G shows nothing, that's the gap, not a broken test.</div>
 
     <h3>H. Results in contX</h3>
     <ol class="steps" data-group="H">
